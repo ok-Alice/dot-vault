@@ -12,8 +12,9 @@ Create 2 assets (loan, collateral):
 
 From under [Network -> Assets](https://polkadot.js.org/apps/#/assets) click create asset and create them as follows
 
-![img/createAsset.png]
-![img/createAsset2.png]
+![CreateAsset](img/createAsset.png)
+
+![CreateAsset2](img/createAsset2.png)
 
 You have to mint some token for each asset.
 
