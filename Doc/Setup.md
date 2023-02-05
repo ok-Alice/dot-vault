@@ -20,8 +20,10 @@ You have to mint some token for each asset.
 
 Afterwards the tokens can be used as ERC20 tokes (via XC20):
 
-AssetID 4242 -> 0xFFFFFFFF00000000000000000000000000001092
-AssetID 4243 -> 0xFFFFFFFF00000000000000000000000000001093
+* AssetID 4242 -> 0xFFFFFFFF00000000000000000000000000001092
+* AssetID 4243 -> 0xFFFFFFFF00000000000000000000000000001093
+
+You can add these tokens to your Metamask wallet via "Import token" and using the above as contract address.
 
 ### ERC721
 
