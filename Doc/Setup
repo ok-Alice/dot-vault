@@ -1,0 +1,12 @@
+# Setup
+
+## Astar node
+
+Download the latest release of the [Astar node](https://github.com/AstarNetwork/Astar/releases) to run it locally:
+
+    $ astar-collator --dev --tmp
+
+### XC20 asset
+
+Create 2 assets (loan, collateral):
+
