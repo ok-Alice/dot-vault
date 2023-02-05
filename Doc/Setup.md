@@ -25,8 +25,13 @@ Afterwards the tokens can be used as ERC20 tokes (via XC20):
 
 You can add these tokens to your Metamask wallet via "Import token" and using the above as contract address.
 
+To provide liquidity to an account in Metamask you need to [convert](https://hoonsubin.github.io/evm-substrate-address-converter/) the H160 address from the Metamask wallet. You can transfer the native token or assets to the converted address with the polkadot.js explorer.
+
 ### ERC721
 
-Deploy a ERC721 contract from Openzeppelin that can mint
+Deploy a ERC721 contract from Openzeppelin that can mint new tokens.
+
+![OpenzepellinERC721](img/OpenzepellinERC721.png)
+
 
 
