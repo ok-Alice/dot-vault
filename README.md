@@ -1,3 +1,3 @@
 # DotVault
 
-Follow [Setup Instructions](Doc/Setup.md)
+To run the project locally, please follow these [setup instructions](Doc/Setup.md)

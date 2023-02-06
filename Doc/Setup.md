@@ -1,5 +1,7 @@
 # Setup
 
+This document will guide you through all the necessary steps to locally run this project. 
+
 ## Astar node
 
 Download the latest release of the [Astar node](https://github.com/AstarNetwork/Astar/releases) to run it locally:
@@ -25,7 +27,7 @@ Afterwards the tokens can be used as ERC20 tokes (via XC20):
 
 You can add these tokens to your Metamask wallet via "Import token" and using the above as contract address.
 
-To provide liquidity to an account in Metamask you need to [convert](https://hoonsubin.github.io/evm-substrate-address-converter/) the H160 address from the Metamask wallet. You can transfer the native token or assets to the converted address with the polkadot.js explorer.
+To provide liquidity to an account in Metamask you need to [convert](https://hoonsubin.github.io/evm-substrate-address-converter/) the H160 address from the Metamask wallet. You can transfer the native token or assets to the converted SS58 address with the polkadot.js explorer.
 
 ### ERC721
 
