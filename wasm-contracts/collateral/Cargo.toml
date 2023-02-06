@@ -17,7 +17,7 @@ scale = { package = "parity-scale-codec", version = "3", default-features = fals
 scale-info = { version = "2", default-features = false, features = ["derive"], optional = true }
 
 xvm-helper = { path = "../../wasm-lib/xvm-helper", default-features = false }
-xvm-sdk-psp34-controller = { path = "../psp34-controller", default-features = false, features = ["ink-as-dependency"] }
+#xvm-sdk-psp34-controller = { path = "../psp34-controller", default-features = false, features = ["ink-as-dependency"] }
 openbrush = { tag = "v2.3.0", git = "https://github.com/Supercolony-net/openbrush-contracts", default-features = false, features = ["psp34"] }
 
 [lib]
@@ -43,7 +43,7 @@ std = [
     "scale/std",
     "scale-info/std",
     "openbrush/std",
-    "xvm-sdk-psp34-controller/std",
+    #"xvm-sdk-psp34-controller/std",
     "xvm-helper/std"
 ]
 ink-as-dependency = []
