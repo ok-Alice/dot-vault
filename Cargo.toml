@@ -4,4 +4,5 @@ members = [
 ]
 exclude = [
     "lib/**",
+    "evm-contracts/**"
 ]
