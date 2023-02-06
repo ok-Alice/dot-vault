@@ -17,7 +17,7 @@ hex-literal = "0.3"
 scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
 scale-info = { version = "2", default-features = false, features = ["derive"], optional = true }
 
-xvm-environment = { path = "../../lib/xvm-environment", default-features = false }
+xvm-environment = { path = "../../wasm-lib/xvm-environment", default-features = false }
 
 [lib]
 name = "xvm_sdk_psp34_controller"
