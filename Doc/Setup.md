@@ -31,7 +31,7 @@ To provide liquidity to an account in Metamask you need to [convert](https://hoo
 
 ### ERC721
 
-Deploy a ERC721 contract from Openzeppelin that can mint new tokens.
+Using the [Openzeppelin Contract wizard](https://wizard.openzeppelin.com/), you can create an ERC721 contract and deploy it through Remix+Metamask.
 
 ![OpenzepellinERC721](img/OpenzepellinERC721.png)
 
