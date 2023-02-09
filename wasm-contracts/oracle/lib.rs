@@ -53,6 +53,9 @@ mod oracle {
 
             oracle.set(String::from("foo"), String::from("bar"));
             assert_eq!(oracle.get(String::from("foo")), String::from("bar"));
+
+            oracle.set(String::from("test"), String::from("1337"));
+            assert_eq!(oracle.get(String::from("test")).parse::<u32>().unwrap(), 1337);
         }
     }
 }
