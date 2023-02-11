@@ -1,12 +1,19 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use ink_lang as ink;
+use ink_storage::traits::SpreadAllocate;
+use ink_env::call::FromAccountId;
+
+pub use self::sign_transfer::{
+    SignTransfer,
+    SignTransferRef,
+};
 
 /// EVM ID (from astar runtime)
 const EVM_ID: u8 = 0x0F;
 
 #[ink::contract(env = xvm_environment::XvmDefaultEnvironment)]
-mod signtransfer {
+pub mod sign_transfer {
     use ethabi::{
         ethereum_types::{
             H160,
@@ -24,20 +31,25 @@ mod signtransfer {
 
     const TRANSFER_FROM_SELECTOR: [u8; 4] = hex!["23b872dd"];
 
-    /// Only one Error is supported
     #[derive(Debug, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
     pub enum STError {
         Custom(String),
     } 
 
+    /// SignTransfer
+    ///
+    /// Used by Collateral for transfering ERC721 token back to original owner. 
+    /// By calling this contract, collateral ensures this contract signs the transfer
+    /// and not the caller of collateral.
     #[ink(storage)]
-    pub struct ST {
-       // evm_address: [u8; 20],
+    pub struct SignTransfer {
+        
+
     }
 
 
-    impl ST {
+    impl SignTransfer {
         #[ink(constructor)]
         pub fn new() -> Self {
             Self {  }
@@ -74,5 +86,14 @@ mod signtransfer {
                 .copy_from_slice(&<ink_env::AccountId as AsRef<[u8]>>::as_ref(from)[..20]);
             dest
         }
+    }
+
+    
+}
+
+// https://github.com/paritytech/ink/issues/1149
+impl SpreadAllocate for SignTransferRef {
+    fn allocate_spread(_ptr: &mut ink_primitives::KeyPtr) -> Self {
+        FromAccountId::from_account_id([0; 32].into())
     }
 }

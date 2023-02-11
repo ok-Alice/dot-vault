@@ -1,5 +1,5 @@
 [package]
-name = "signtransfer"
+name = "sign-transfer"
 version = "0.1.0"
 authors = ["okAlice - Zabuxx"]
 edition = "2021"
@@ -17,10 +17,10 @@ hex-literal = "0.3"
 scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
 scale-info = { version = "2", default-features = false, features = ["derive"], optional = true }
 
-xvm-environment = { path = "../../wasm-lib/xvm-environment", default-features = false }
+xvm-environment = { path = "../../../wasm-lib/xvm-environment", default-features = false }
 
 [lib]
-name = "signtransfer"
+name = "sign_transfer"
 path = "lib.rs"
 crate-type = [
     # Used for normal contract Wasm blobs.
