@@ -85,7 +85,7 @@ pub mod collateral {
             let caller = self.env().caller();
             let contract = self.env().account_id();
 
-            let (risk_factor,collateral_factor) = self.registered_nft_collection(evm_address)?;
+            let (_risk_factor, _collateral_factor) = self.registered_nft_collection(evm_address)?;
             
             XvmErc721::transfer_from(evm_address, caller, contract, U256::from(id))
                 .map_err(|_| CollateralError::Custom(String::from("transfer failed")))
@@ -99,7 +99,6 @@ pub mod collateral {
         #[ink(message)]
         pub fn withdraw_nft(&mut self, evm_address: EvmContractAddress, id: NftId) -> Result<(),CollateralError> {
             let caller = self.env().caller();
-            //PSP34Ref::transfer(&mut self.psp34_controller, caller, id, Vec::new())
 
             //TODO: check user holds this NFT as collateral
 
@@ -129,20 +128,31 @@ pub mod collateral {
 
         /// Allows user to request transfer of SCoin as long as loan limit allows it
         #[ink(message)]
-        pub fn take_loan(&mut self, _amount: Balance ) -> Result<(), CollateralError> {
-            // TODO: check if user has enough loan limit - open loan
+        pub fn take_loan(&mut self, amount: Balance ) -> Result<(), CollateralError> {
+            let caller = self.env().caller();
+            let (loan_limit, loan_open, _) = self.update_loan_status(caller)?;
+
+            if loan_open + amount > loan_limit {
+                return Err(CollateralError::Custom(String::from("Insufficient loan balance")));
+            }
 
             // TODO: transfer CCoin using SignTransferRef
 
-            // TODO: register open-loan
-
+            self.loans.insert(&caller, &(loan_limit,loan_open+amount,self.env().block_number()));
+           
             Ok(())
 
         }
 
         /// Allows user to repay previously claimed loan
         #[ink(message)] 
-        pub fn repay_loan(&mut self, _amount: Balance) -> Result<(), CollateralError> {
+        pub fn repay_loan(&mut self, amount: Option<Balance>) -> Result<(), CollateralError> {
+            let caller = self.env().caller();
+            let (_, loan_open, _) = self.update_loan_status(caller)?;
+
+            let _amount_to_transfer = amount.unwrap_or(loan_open);
+            
+            
             // TODO: check if the user has this much open loan
 
             // TODO: transfer CCoin from user to contract (SignTransferRef)
@@ -171,12 +181,18 @@ pub mod collateral {
         /// Caculates and updates open loan for given user
         /// new open loan = old open loan + (last loan change - now) * interest rate
         #[ink(message)] 
-        pub fn updates_loan_balance(&mut self, _user: AccountId) -> Result<(), CollateralError> {
-            //TODO: calculate interest since last update
+        pub fn update_loan_status(&mut self, user: AccountId) -> Result<(LoanLimit, LoanOpen, LoanLastChange), CollateralError> {
+            let (loan_limit, loan_open, _loan_last_change) = self.loan_status(user)?;
 
-            //TOD: update open loan and loan last change for this user
+            let current_block = self.env().block_number();
 
-            Ok(())
+            //TODO: commented line below is relatively correct, but causes nasty rust error, figure out work-around
+            //let new_loan_open = loan_open + u128::from((loan_last_change - current_block) * self.interest_rate )* loan_open / 1_000_000;
+            let new_loan_open = loan_open;
+
+            self.loans.insert(&user, &(loan_limit, new_loan_open, current_block));
+
+            Ok((loan_limit, new_loan_open, current_block))
         }
 
     }
