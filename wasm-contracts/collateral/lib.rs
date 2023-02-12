@@ -7,8 +7,8 @@ pub mod collateral {
         Mapping,
         traits::SpreadAllocate
     };
+    use ink_prelude::vec::Vec;
     use openbrush::{
-        //storage::Mapping,
         traits::{
             Storage,
             String,
@@ -35,13 +35,16 @@ pub mod collateral {
     type LoanLimit = Balance;
     type LoanOpen = Balance;
     type LoanLastChange = BlockNumber;
-    type InterestRate = u32; // Interast rate / block (/1_000_000)
+    type InterestRate = u32; // Interest rate / block (/1_000_000)
+
+    type NftId = u32;
 
     #[derive(SpreadAllocate, Storage)]
     #[ink(storage)]
     pub struct Collateral {
         collections: Mapping<EvmContractAddress, (RiskFactor, CollateralFactor)>,
         loans: Mapping<AccountId, (LoanLimit, LoanOpen, LoanLastChange)>,
+        collaterals: Mapping<AccountId,Vec<(EvmContractAddress, NftId)>>, 
         sign_transfer: SignTransferRef,
         interest_rate: InterestRate,
         #[storage_field]
@@ -78,11 +81,11 @@ pub mod collateral {
 
         /// Allows a user to deposit an NFT as collateral to increase it's loan limit
         #[ink(message)]
-        pub fn deposit_nft(&mut self, evm_address: EvmContractAddress, id: u32) -> Result<(),CollateralError> {
+        pub fn deposit_nft(&mut self, evm_address: EvmContractAddress, id: NftId) -> Result<(),CollateralError> {
             let caller = self.env().caller();
             let contract = self.env().account_id();
             
-            //TODO: Check contract is allowed
+            //TODO: Check this collection is allowed
 
             XvmErc721::transfer_from(evm_address, caller, contract, U256::from(id))
                 .map_err(|_| CollateralError::Custom(String::from("transfer failed")))
@@ -94,11 +97,12 @@ pub mod collateral {
 
         /// Allows a user to reclaim NFT to decrease it's loan balance (as long as open loan is smaller)
         #[ink(message)]
-        pub fn withdraw_nft(&mut self, evm_address: EvmContractAddress, id: u32) -> Result<(),CollateralError> {
+        pub fn withdraw_nft(&mut self, evm_address: EvmContractAddress, id: NftId) -> Result<(),CollateralError> {
             let caller = self.env().caller();
             //PSP34Ref::transfer(&mut self.psp34_controller, caller, id, Vec::new())
 
             //TODO: check user holds this NFT as collateral
+
             //TODO: check user balance allows this
 
             SignTransferRef::transfer(&mut self.sign_transfer, evm_address, caller, id)
