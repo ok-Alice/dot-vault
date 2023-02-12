@@ -23,7 +23,9 @@ pub mod collateral {
 
     use sign_transfer::sign_transfer::{
         SignTransferRef,
-        CollateralError};
+        CollateralError
+    };
+    use oracle::oracle::OracleRef;
 
     use ethabi::ethereum_types::U256;
     use xvm_helper::XvmErc721;
@@ -46,6 +48,7 @@ pub mod collateral {
         loans: Mapping<AccountId, (LoanLimit, LoanOpen, LoanLastChange)>,
         collaterals: Mapping<AccountId,Vec<(EvmContractAddress, NftId)>>, 
         sign_transfer: SignTransferRef,
+        oracle: OracleRef,
         interest_rate: InterestRate,
         #[storage_field]
         ownable: ownable::Data,
@@ -58,7 +61,7 @@ pub mod collateral {
         /// Constructor:
         ///  - Needs the hash of previously deployed sign-transfer contract 
         #[ink(constructor)]
-        pub fn new(version: u32, sign_transfer_hash: Hash, interest_rate: Option<InterestRate>) -> Self {
+        pub fn new(version: u32, sign_transfer_hash: Hash, oracle_hash: Hash, interest_rate: Option<InterestRate>) -> Self {
             ink_lang::codegen::initialize_contract(|instance: &mut Self| {
                 let caller = instance.env().caller();
                 instance._init_with_owner(caller);
@@ -76,6 +79,14 @@ pub mod collateral {
                     });
 
                 instance.sign_transfer = sign_transfer;
+                instance.oracle = OracleRef::new()
+                    .endowment(0)
+                    .code_hash(oracle_hash)
+                    .salt_bytes(salt)
+                    .instantiate()
+                    .unwrap_or_else(|error| {
+                        panic!("failed at instantiating the Oracle contract: {:?}", error)
+                    });
             })
         }
 
@@ -88,10 +99,17 @@ pub mod collateral {
             let (_risk_factor, _collateral_factor) = self.registered_nft_collection(evm_address)?;
             
             XvmErc721::transfer_from(evm_address, caller, contract, U256::from(id))
-                .map_err(|_| CollateralError::Custom(String::from("transfer failed")))
+                .map_err(|_| CollateralError::Custom(String::from("transfer failed")))?;
 
-            //TODO: query oracle
-            //TODO: modify user loan balance
+            // query oracle
+            let floor_price = self.oracle.get_floor_price(id.to_string())
+                .map_err(|_| CollateralError::Custom(String::from("floor price retrieval failed")))?;
+            // modify user loan balance
+            let (loan_limit, loan_open, _) = self.update_loan_status(caller)?;
+            let new_loan_limit = loan_limit + floor_price;
+
+            self.loans.insert(&caller, &(new_loan_limit, loan_open, self.env().block_number()));
+            Ok(())
         }
 
 
