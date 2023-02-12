@@ -14,7 +14,9 @@ pub mod collateral {
     };
 
     //use openbrush::contracts::psp34::{PSP34Error};
-    use sign_transfer::sign_transfer::SignTransferRef;
+    use sign_transfer::sign_transfer::{
+        SignTransferRef,
+        CollateralError};
 
     use ethabi::ethereum_types::U256;
     use openbrush::contracts::psp34::Id;
@@ -31,11 +33,6 @@ pub mod collateral {
         sign_transfer: SignTransferRef,
     }
 
-    #[derive(Debug, scale::Encode, scale::Decode)]
-    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
-    pub enum CollateralError {
-        Custom(String),
-    } 
 
     impl Collateral {
 
@@ -59,23 +56,35 @@ pub mod collateral {
         }
 
         #[ink(message)]
-        pub fn deposit(&mut self, evm_address: EvmContractAddress, id: Id) -> Result<(),CollateralError> {
+        pub fn deposit_nft(&mut self, evm_address: EvmContractAddress, id: u32) -> Result<(),CollateralError> {
             let caller = self.env().caller();
             let contract = self.env().account_id();
             
             //TODO: Check contract is allowed
 
-            XvmErc721::transfer_from(evm_address, caller, contract, cast(id.clone()))
+            XvmErc721::transfer_from(evm_address, caller, contract, U256::from(id))
                 .map_err(|_| CollateralError::Custom(String::from("transfer failed")))
+
+            //TODO: 
         }
 
 
-        // #[ink(message)]
-        // pub fn withdraw(&mut self, id: Id) -> Result<(),PSP34Error> {
-        //     let caller = self.env().caller();
-        //     PSP34Ref::transfer(&mut self.psp34_controller, caller, id, Vec::new())
-        // }
+        #[ink(message)]
+        pub fn withdraw_nft(&mut self, evm_address: EvmContractAddress, id: u32) -> Result<(),CollateralError> {
+            let caller = self.env().caller();
+            //PSP34Ref::transfer(&mut self.psp34_controller, caller, id, Vec::new())
+
+            //TODO: check user holds this NFT as collateral
+            //TODO: check user balance allows this
+
+            SignTransferRef::transfer(&mut self.sign_transfer, evm_address, caller, id)
+
+            //TODO: modify user load balance
+        }
+
+        
     }
+
 
     fn cast(id: Id) -> U256 {
         return match id {

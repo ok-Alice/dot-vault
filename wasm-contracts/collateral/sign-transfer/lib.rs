@@ -23,17 +23,28 @@ pub mod sign_transfer {
     };
     use hex_literal::hex;
     use ink_prelude::{
-        string::{
-            String,
-        },
+    //    string::{
+    //        String,
+    //    },
         vec::Vec,
     };
 
+    use openbrush::traits::String;
+        
+    
+
+
     const TRANSFER_FROM_SELECTOR: [u8; 4] = hex!["23b872dd"];
+
+    // #[derive(Debug, scale::Encode, scale::Decode)]
+    // #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
+    // pub enum STError {
+    //     Custom(String),
+    // } 
 
     #[derive(Debug, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
-    pub enum STError {
+    pub enum CollateralError {
         Custom(String),
     } 
 
@@ -56,7 +67,7 @@ pub mod sign_transfer {
         }
 
         #[ink(message, selector = 0x3128d61b)]
-        pub fn transfer(&mut self, evm_address: [u8; 20], to: AccountId, id: u32, _data: Vec<u8>) -> Result<(), STError> {
+        pub fn transfer(&mut self, evm_address: [u8; 20], to: AccountId, id: u32) -> Result<(), CollateralError> {
             let caller = self.env().caller();
             let encoded_input = Self::transfer_from_encode(Self::h160(&caller), Self::h160(&to), id.into());
             self.env()
@@ -66,7 +77,7 @@ pub mod sign_transfer {
                     Vec::from(evm_address.as_ref()),
                     encoded_input,
                 )
-                .map_err(|_| STError::Custom(String::from("transfer failed")))
+                .map_err(|_| CollateralError::Custom(String::from("transfer failed")))
         }
 
         fn transfer_from_encode(from: H160, to: H160, token_id: U256) -> Vec<u8> {
