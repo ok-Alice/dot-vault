@@ -47,7 +47,8 @@ std = [
     "openbrush/std",
 
     "xvm-helper/std",
-    "sign-transfer/std"
+    "sign-transfer/std",
+    "oracle/std"
 ]
 ink-as-dependency = []
 

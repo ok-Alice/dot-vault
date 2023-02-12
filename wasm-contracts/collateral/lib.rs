@@ -8,6 +8,7 @@ pub mod collateral {
         traits::SpreadAllocate
     };
     use ink_prelude::vec::Vec;
+    use ink_prelude::string::ToString;
     use openbrush::{
         traits::{
             Storage,
