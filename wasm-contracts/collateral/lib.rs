@@ -3,8 +3,10 @@
 
 #[openbrush::contract]
 pub mod collateral {
-    use ink_storage::traits::SpreadAllocate;
-    use ink_prelude::vec::Vec;
+    use ink_storage::{
+        Mapping,
+        traits::SpreadAllocate
+    };
     use openbrush::{
         //storage::Mapping,
         traits::{
@@ -13,33 +15,44 @@ pub mod collateral {
         },
     };
 
-    //use openbrush::contracts::psp34::{PSP34Error};
+    use openbrush::{
+        contracts::ownable::*,
+        modifiers,
+    };
+
+
     use sign_transfer::sign_transfer::{
         SignTransferRef,
         CollateralError};
 
     use ethabi::ethereum_types::U256;
-    use openbrush::contracts::psp34::Id;
     use xvm_helper::XvmErc721;
 
     type EvmContractAddress = [u8; 20];
+    type RiskFactor = u32;
+    type CollateralFactor = u32;
 
     #[derive(SpreadAllocate, Storage)]
     #[ink(storage)]
     pub struct Collateral {
         //#[storage_field]
-        collections: Vec<EvmContractAddress>,
-        risk_factor: u32,
+ //       collections: Vec<EvmContractAddress>,
+        collections: Mapping<EvmContractAddress, (RiskFactor, CollateralFactor)>,
         sign_transfer: SignTransferRef,
+        #[storage_field]
+        ownable: ownable::Data,
     }
 
+    impl Ownable for Collateral {}
 
     impl Collateral {
 
         #[ink(constructor)]
         pub fn new(version: u32, sign_transfer_hash: Hash, risk_factor: u32) -> Self {
             ink_lang::codegen::initialize_contract(|instance: &mut Self| {
-                instance.risk_factor = risk_factor;
+                let caller = instance.env().caller();
+                instance._init_with_owner(caller);
+
 
                 let salt = version.to_le_bytes();
                 let sign_transfer = SignTransferRef::new()
@@ -82,18 +95,15 @@ pub mod collateral {
             //TODO: modify user load balance
         }
 
-        
-    }
-
-
-    fn cast(id: Id) -> U256 {
-        return match id {
-            Id::U8(v) => U256::from(v),
-            Id::U16(v) => U256::from(v),
-            Id::U32(v) => U256::from(v),
-            Id::U64(v) => U256::from(v),
-            Id::U128(v) => U256::from(v),
-            Id::Bytes(v) => U256::from(v.as_slice()),
+        #[ink(message)]
+        #[modifiers(only_owner)]
+        pub fn register_nft_collection(&mut self, evm_address: EvmContractAddress, risk_factor: RiskFactor, collateral_factor: CollateralFactor) -> Result<(),CollateralError> {
+            self.collections.insert(&evm_address, &(risk_factor, collateral_factor));
+            Ok(())
         }
+
+
     }
+
+
 }

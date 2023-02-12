@@ -30,23 +30,26 @@ pub mod sign_transfer {
     };
 
     use openbrush::traits::String;
-        
+    use openbrush::contracts::ownable::OwnableError;
     
-
-
     const TRANSFER_FROM_SELECTOR: [u8; 4] = hex!["23b872dd"];
-
-    // #[derive(Debug, scale::Encode, scale::Decode)]
-    // #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
-    // pub enum STError {
-    //     Custom(String),
-    // } 
 
     #[derive(Debug, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
     pub enum CollateralError {
         Custom(String),
     } 
+
+    impl From<OwnableError> for CollateralError {
+        fn from(ownable: OwnableError) -> Self {
+            match ownable {
+                OwnableError::CallerIsNotOwner => {
+                    CollateralError::Custom(String::from("O::CallerIsNotOwner"))
+                }
+                OwnableError::NewOwnerIsZero => CollateralError::Custom(String::from("O::NewOwnerIsZero")),
+            }
+        }
+    }
 
     /// SignTransfer
     ///
