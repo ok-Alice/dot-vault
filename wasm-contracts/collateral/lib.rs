@@ -105,10 +105,10 @@ pub mod collateral {
             let floor_price = self.oracle.get_floor_price(id.to_string())
                 .map_err(|_| CollateralError::Custom(String::from("floor price retrieval failed")))?;
             // modify user loan balance
-            let (loan_limit, loan_open, _) = self.update_loan_status(caller)?;
+            let (loan_limit, loan_open, current_block) = self.update_loan_status(caller)?;
             let new_loan_limit = loan_limit + floor_price;
 
-            self.loans.insert(&caller, &(new_loan_limit, loan_open, self.env().block_number()));
+            self.loans.insert(&caller, &(new_loan_limit, loan_open, current_block));
             Ok(())
         }
 
