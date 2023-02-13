@@ -97,7 +97,7 @@ pub mod collateral {
             let caller = self.env().caller();
             let contract = self.env().account_id();
 
-            let (_risk_factor, _collateral_factor) = self.registered_nft_collection(evm_address)?;
+            let (_risk_factor, collateral_factor) = self.registered_nft_collection(evm_address)?;
             
             XvmErc721::transfer_from(evm_address, caller, contract, U256::from(id))
                 .map_err(|_| CollateralError::Custom(String::from("transfer failed")))?;
@@ -107,7 +107,7 @@ pub mod collateral {
                 .map_err(|_| CollateralError::Custom(String::from("floor price retrieval failed")))?;
             // modify user loan balance
             let (loan_limit, loan_open, current_block) = self.update_loan_status(caller)?;
-            let new_loan_limit = loan_limit + floor_price;
+            let new_loan_limit = loan_limit.saturating_add(floor_price.saturating_mul(collateral_factor.into()));
 
             self.loans.insert(&caller, &(new_loan_limit, loan_open, current_block));
             Ok(())
