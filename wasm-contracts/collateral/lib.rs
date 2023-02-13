@@ -123,7 +123,7 @@ pub mod collateral {
 
             //TODO: check user balance allows this
 
-            SignTransferRef::transfer(&mut self.sign_transfer, evm_address, caller, id)
+            self.sign_transfer.transfer(evm_address, caller, id)
 
             //TODO: modify user load limit
         }

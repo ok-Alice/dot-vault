@@ -20,7 +20,7 @@ xvm-helper = { path = "../../wasm-lib/xvm-helper", default-features = false }
 sign-transfer = { path = "sign-transfer", default-features = false, features = ["ink-as-dependency"] }
 oracle = { path = "oracle", default-features = false, features = ["ink-as-dependency"] }
 
-openbrush = { tag = "v2.3.0", git = "https://github.com/Supercolony-net/openbrush-contracts", default-features = false, features = ["ownable"] }
+openbrush = { git = "https://github.com/PierreOssun/openbrush-contracts", default-features = false, features = ["ownable"] }
 
 [lib]
 name = "collateral"

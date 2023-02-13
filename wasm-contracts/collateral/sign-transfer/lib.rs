@@ -28,10 +28,10 @@ pub mod sign_transfer {
     //    },
         vec::Vec,
     };
-
     use openbrush::traits::String;
     use openbrush::contracts::ownable::OwnableError;
-    
+    use assets_extension::*;
+
     const TRANSFER_FROM_SELECTOR: [u8; 4] = hex!["23b872dd"];
 
     #[derive(Debug, scale::Encode, scale::Decode)]
@@ -57,16 +57,12 @@ pub mod sign_transfer {
     /// By calling this contract, collateral ensures this contract signs the transfer
     /// and not the caller of collateral.
     #[ink(storage)]
-    pub struct SignTransfer {
-        
-
-    }
-
+    pub struct SignTransfer {}
 
     impl SignTransfer {
         #[ink(constructor)]
         pub fn new() -> Self {
-            Self {  }
+            Self {}
         }
 
         #[ink(message, selector = 0x3128d61b)]
@@ -81,6 +77,13 @@ pub mod sign_transfer {
                     encoded_input,
                 )
                 .map_err(|_| CollateralError::Custom(String::from("transfer failed")))
+        }
+
+        #[ink(message)]
+        pub fn transfer_coins(&mut self, origin: Origin, amount: Balance, to: AccountId, asset_id: u128) -> Result<(), CollateralError> {
+            AssetsExtension::transfer(origin, asset_id, to, amount)
+            .map_err(|_| CollateralError::Custom("transfer failed".into()))?;
+            Ok(())
         }
 
         fn transfer_from_encode(from: H160, to: H160, token_id: U256) -> Vec<u8> {
