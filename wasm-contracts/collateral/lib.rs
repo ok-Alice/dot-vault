@@ -110,6 +110,12 @@ pub mod collateral {
             let new_loan_limit = loan_limit.saturating_add(floor_price.saturating_mul(collateral_factor.into()));
 
             self.loans.insert(&caller, &(new_loan_limit, loan_open, current_block));
+
+            // TODO: Verify if this is needed
+            let mut caller_collaterals = self.collaterals.get(caller).unwrap_or(vec![]);
+            caller_collaterals.push((evm_address, id));
+            self.collaterals.insert(&caller, &caller_collaterals);
+
             Ok(())
         }
 
