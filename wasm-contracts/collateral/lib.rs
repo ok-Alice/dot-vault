@@ -112,7 +112,8 @@ pub mod collateral {
             self.loans.insert(&caller, &(new_loan_limit, loan_open, current_block));
 
             // TODO: Verify if this is needed
-            let mut caller_collaterals = self.collaterals.get(caller).unwrap_or(vec![]);
+            let mut caller_collaterals = self.collaterals.get(caller).unwrap_or(Vec::new());
+
             caller_collaterals.push((evm_address, id));
             self.collaterals.insert(&caller, &caller_collaterals);
 
