@@ -70,7 +70,7 @@ pub mod collateral {
                 instance.interest_rate = interest_rate.unwrap_or(15);
 
                 let salt = version.to_le_bytes();
-                let sign_transfer = SignTransferRef::new()
+                instance.sign_transfer = SignTransferRef::new()
                     .endowment(0)
                     .code_hash(sign_transfer_hash)
                     .salt_bytes(salt)
@@ -79,7 +79,7 @@ pub mod collateral {
                         panic!("failed at instantiating the Sign Transfer contract: {:?}", error)
                     });
 
-                instance.sign_transfer = sign_transfer;
+                
                 instance.oracle = OracleRef::new()
                     .endowment(0)
                     .code_hash(oracle_hash)
@@ -111,7 +111,7 @@ pub mod collateral {
 
             self.loans.insert(&caller, &(new_loan_limit, loan_open, current_block));
 
-            // TODO: Verify if this is needed
+            // TODO: Verify if this is needed <- yes it is!
             let mut caller_collaterals = self.collaterals.get(caller).unwrap_or(Vec::new());
 
             caller_collaterals.push((evm_address, id));
