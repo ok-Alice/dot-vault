@@ -29,6 +29,8 @@ You can add these tokens to your Metamask wallet via "Import token" and using th
 
 To provide liquidity to an account in Metamask you need to [convert](https://hoonsubin.github.io/evm-substrate-address-converter/) the H160 address from the Metamask wallet. You can transfer the native token or assets to the converted SS58 address with the polkadot.js explorer.
 
+Or you can add the [Test account](https://github.com/AstarNetwork/Astar/blob/de5b8db29794917ffab8fb0a4a7b2a9a52491452/bin/collator/src/local/chain_spec.rs#L61-L66) that is funded with native token to Metamask.
+
 ### ERC721
 
 Using the [Openzeppelin Contract wizard](https://wizard.openzeppelin.com/), you can create an ERC721 contract and deploy it through Remix+Metamask.
