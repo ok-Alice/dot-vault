@@ -22,6 +22,8 @@ oracle = { path = "oracle", default-features = false, features = ["ink-as-depend
 
 openbrush = { git = "https://github.com/PierreOssun/openbrush-contracts", default-features = false, features = ["ownable"] }
 
+hex = "0.4.3"
+
 [lib]
 name = "collateral"
 path = "lib.rs"
@@ -34,22 +36,7 @@ crate-type = [
 
 [features]
 default = ["std"]
-std = [
-    "ink_primitives/std",
-    "ink_metadata",
-    "ink_metadata/std",
-    "ink_env/std",
-    "ink_storage/std",
-    "ink_lang/std",
-    "ink_prelude/std",
-    "scale/std",
-    "scale-info/std",
-    "openbrush/std",
-
-    "xvm-helper/std",
-    "sign-transfer/std",
-    "oracle/std"
-]
+std = ["ink_primitives/std", "ink_metadata", "ink_metadata/std", "ink_env/std", "ink_storage/std", "ink_lang/std", "ink_prelude/std", "scale/std", "scale-info/std", "openbrush/std", "xvm-helper/std", "sign-transfer/std", "oracle/std"]
 ink-as-dependency = []
 
 [workspace]

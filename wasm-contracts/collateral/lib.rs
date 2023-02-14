@@ -21,6 +21,7 @@ pub mod collateral {
         modifiers,
     };
 
+    use hex;
 
     use sign_transfer::sign_transfer::{
         SignTransferRef,
@@ -42,6 +43,14 @@ pub mod collateral {
 
     type NftId = u32;
     type FloorPrice = Balance;
+
+    #[ink(event)]
+    pub struct BalanceUpdate {
+        account: AccountId,
+        loan_limit: LoanLimit,
+        loan_open: LoanOpen,
+    }
+
 
     #[derive(SpreadAllocate, Storage)]
     #[ink(storage)]
@@ -104,14 +113,17 @@ pub mod collateral {
                 .map_err(|_| CollateralError::Custom(String::from("transfer failed")))?;
 
             // query oracle
-            let floor_price = self.oracle.get_floor_price(id.to_string())
+            let query = format!("nft/0x{}", hex::encode(&evm_address));
+            let floor_price = self.oracle.get_floor_price(query)
                 .map_err(|_| CollateralError::Custom(String::from("floor price retrieval failed")))?;
 
             // modify user loan balance
             let (loan_limit, loan_open, current_block) = self.update_loan_status(caller)?;
             let new_loan_limit = loan_limit.saturating_add(floor_price.saturating_mul(collateral_factor.into()));
 
-            self.loans.insert(&caller, &(new_loan_limit, loan_open, current_block));
+            self.loans_insert(&caller, new_loan_limit, loan_open, current_block);
+            
+        
 
             // TODO: Verify if this is needed <- yes it is!
             let mut caller_collaterals = self.collaterals.get(caller).unwrap_or(Vec::new());
@@ -162,7 +174,8 @@ pub mod collateral {
             self.collaterals.insert(&caller, &new_caller_collaterals);
 
             // modify user loan limit
-            self.loans.insert(&caller, &(new_loan_limit, loan_open, current_block));
+            self.loans_insert(&caller, new_loan_limit, loan_open, current_block);
+
 
             Ok(())
         }
@@ -245,9 +258,19 @@ pub mod collateral {
             //let new_loan_open = loan_open + u128::from((loan_last_change - current_block) * self.interest_rate )* loan_open / 1_000_000;
             let new_loan_open = loan_open;
 
-            self.loans.insert(&user, &(loan_limit, new_loan_open, current_block));
+            self.loans_insert(&user, loan_limit, new_loan_open, current_block);
 
             Ok((loan_limit, new_loan_open, current_block))
+        }
+
+        pub fn loans_insert(&mut self, account: &AccountId, loan_limit: LoanLimit, loan_open: LoanOpen, block: BlockNumber) {
+            self.loans.insert(&account, &(loan_limit, loan_open, block));
+
+            Self::env().emit_event(BalanceUpdate {
+                account: *account,
+                loan_limit: loan_limit,
+                loan_open: loan_open,
+            });
         }
 
     }
