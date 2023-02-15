@@ -7,7 +7,6 @@ pub mod collateral {
         Mapping,
         traits::SpreadAllocate
     };
-    use ink_prelude::vec::Vec;
     
     use openbrush::{
         traits::{
@@ -55,7 +54,7 @@ pub mod collateral {
     pub struct Collateral {
         collections: Mapping<EvmContractAddress, (RiskFactor, CollateralFactor)>,
         loans: Mapping<AccountId, (LoanLimit, LoanOpen, LoanLastChange)>,
-        collaterals: Mapping<AccountId,Vec<(EvmContractAddress, NftId, FloorPrice)>>,
+        collaterals: Mapping<(AccountId,EvmContractAddress, NftId), FloorPrice>,
         sign_transfer: SignTransferRef,
         oracle: OracleRef,
         interest_rate: InterestRate,
@@ -120,14 +119,8 @@ pub mod collateral {
             let new_loan_limit = loan_limit.saturating_add(floor_price.saturating_mul(collateral_factor.into()));
 
             self.loans_insert(&caller, new_loan_limit, loan_open, current_block);
-            
-        
 
-            // TODO: Verify if this is needed <- yes it is!
-            let mut caller_collaterals = self.collaterals.get(caller).unwrap_or(Vec::new());
-
-            caller_collaterals.push((evm_address, id, floor_price));
-            self.collaterals.insert(&caller, &caller_collaterals);
+            self.collaterals.insert(&(caller, evm_address, id), &floor_price); 
 
             Ok(())
         }
@@ -140,25 +133,10 @@ pub mod collateral {
             let (_risk_factor, collateral_factor) = self.registered_nft_collection(evm_address)?;
 
             // check user holds this NFT as collateral
-            let caller_collaterals = self.collaterals.get(caller).unwrap_or(Vec::new());
-            let mut is_owner = false;
-            let mut floor_price: Balance = 0;
-            let mut new_caller_collaterals = Vec::<(EvmContractAddress, NftId, FloorPrice)>::new();
-
-            // TODO: Maybe we should not use an array and instead use Mapping<NftId, (AccountId, ...)>?
-            for caller_collateral in &caller_collaterals {
-                let (_evm_address, nft_id, nft_floor_price) = caller_collateral;
-                if *nft_id == id {
-                    floor_price = *nft_floor_price;
-                    is_owner = true;
-                } else {
-                    new_caller_collaterals.push(*caller_collateral);
-                }
-            }
-
-            if !is_owner {
-                return Err(CollateralError::Custom(String::from("caller is not owner of nft")));
-            }
+            let floor_price = match self.collaterals.get((caller, evm_address, id)) {
+                Some(p) =>  p,
+                None => return  Err(CollateralError::Custom(String::from("Not owner of NFT.")))
+            };
 
             // check user balance allows this
             let (loan_limit, loan_open, current_block) = self.update_loan_status(caller)?;
@@ -169,7 +147,7 @@ pub mod collateral {
             }
 
             self.sign_transfer.transfer_nft(evm_address, caller, id)?;
-            self.collaterals.insert(&caller, &new_caller_collaterals);
+            self.collaterals.remove(&(caller, evm_address, id));
 
             // modify user loan limit
             self.loans_insert(&caller, new_loan_limit, loan_open, current_block);
@@ -205,7 +183,12 @@ pub mod collateral {
                 return Err(CollateralError::Custom(String::from("Insufficient loan balance")));
             }
 
+            let caller = self.env().caller();
+
+
             // TODO: transfer CCoin using SignTransferRef
+
+//            self.sign_transfer.transfer_coins()
 
             self.loans.insert(&caller, &(loan_limit,loan_open+amount,self.env().block_number()));
 
