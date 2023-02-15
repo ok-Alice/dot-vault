@@ -22,7 +22,7 @@ oracle = { path = "oracle", default-features = false, features = ["ink-as-depend
 
 openbrush = { git = "https://github.com/PierreOssun/openbrush-contracts", default-features = false, features = ["ownable"] }
 
-hex = "0.4.3"
+hex = { version = "0.4.3", default-features = false }
 
 [lib]
 name = "collateral"

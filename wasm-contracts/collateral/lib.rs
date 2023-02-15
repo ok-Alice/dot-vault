@@ -8,7 +8,7 @@ pub mod collateral {
         traits::SpreadAllocate
     };
     use ink_prelude::vec::Vec;
-    use ink_prelude::string::ToString;
+    
     use openbrush::{
         traits::{
             Storage,
@@ -20,8 +20,6 @@ pub mod collateral {
         contracts::ownable::*,
         modifiers,
     };
-
-    use hex;
 
     use sign_transfer::sign_transfer::{
         SignTransferRef,
@@ -113,7 +111,7 @@ pub mod collateral {
                 .map_err(|_| CollateralError::Custom(String::from("transfer failed")))?;
 
             // query oracle
-            let query = format!("nft/0x{}", hex::encode(&evm_address));
+            let query = ink_env::format!("nft/0x{}", hex::encode(&evm_address));
             let floor_price = self.oracle.get_floor_price(query)
                 .map_err(|_| CollateralError::Custom(String::from("floor price retrieval failed")))?;
 
