@@ -66,7 +66,7 @@ pub mod sign_transfer {
         }
 
         #[ink(message, selector = 0x3128d61b)]
-        pub fn transfer(&mut self, evm_address: [u8; 20], to: AccountId, id: u32) -> Result<(), CollateralError> {
+        pub fn transfer_nft(&mut self, evm_address: [u8; 20], to: AccountId, id: u32) -> Result<(), CollateralError> {
             let caller = self.env().caller();
             let encoded_input = Self::transfer_from_encode(Self::h160(&caller), Self::h160(&to), id.into());
             self.env()

@@ -168,7 +168,7 @@ pub mod collateral {
                 return Err(CollateralError::Custom(String::from("open loan is too large to allow withdrawal of nft")));
             }
 
-            self.sign_transfer.transfer(evm_address, caller, id)?;
+            self.sign_transfer.transfer_nft(evm_address, caller, id)?;
             self.collaterals.insert(&caller, &new_caller_collaterals);
 
             // modify user loan limit
@@ -232,7 +232,7 @@ pub mod collateral {
         #[ink(message)]
         pub fn loan_status(&self, user: AccountId) -> Result<(LoanLimit, LoanOpen, LoanLastChange),CollateralError> {
             match self.loans.get(&user) {
-                Some((l,o,c)) => return Ok((l,o,c)),
+                Some((l,o,c)) => Ok((l,o,c)),
                 None => Err(CollateralError::Custom(String::from("Unknown User")))
             }
         }
@@ -248,13 +248,14 @@ pub mod collateral {
         /// new open loan = old open loan + (last loan change - now) * interest rate
         #[ink(message)] 
         pub fn update_loan_status(&mut self, user: AccountId) -> Result<(LoanLimit, LoanOpen, LoanLastChange), CollateralError> {
-            let (loan_limit, loan_open, _loan_last_change) = self.loan_status(user)?;
+            let (loan_limit, loan_open, loan_last_change) = self.loan_status(user)?;
 
             let current_block = self.env().block_number();
 
-            //TODO: commented line below is relatively correct, but causes nasty rust error, figure out work-around
-            //let new_loan_open = loan_open + u128::from((loan_last_change - current_block) * self.interest_rate )* loan_open / 1_000_000;
-            let new_loan_open = loan_open;
+            //TODO: using u64 cast as u128 gives 'Validation of the Wasm failed' error, figure out why 
+            // formula: new_loan_open = loan_open + ((loan_last_change - current_block) * self.interest_rate )* loan_open / 1_000_000
+            let interest = u64::from(loan_last_change).saturating_sub(current_block.into()).saturating_mul(self.interest_rate.into()).saturating_mul(loan_open as u64).saturating_div(1_000_000);
+            let new_loan_open = loan_open.saturating_add(interest.into());
 
             self.loans_insert(&user, loan_limit, new_loan_open, current_block);
 
@@ -270,7 +271,5 @@ pub mod collateral {
                 loan_open: loan_open,
             });
         }
-
     }
-
 }
