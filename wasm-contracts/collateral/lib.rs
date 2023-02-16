@@ -20,15 +20,22 @@ pub mod collateral {
         modifiers,
     };
 
+    
     use sign_transfer::sign_transfer::{
         SignTransferRef,
         CollateralError
     };
     use oracle::oracle::OracleRef;
-
+    
     use ethabi::ethereum_types::U256;
     use xvm_helper::XvmErc721;
-
+    
+    // pub use pallet_assets_chain_extension::{
+    //     ink::*,
+    //     traits::*,
+    // };
+    use assets_extension::*;
+    
     use rand_chacha::ChaChaRng; // for mock data only
     use rand_chacha::rand_core::RngCore;
     use rand_chacha::rand_core::SeedableRng;
@@ -41,6 +48,8 @@ pub mod collateral {
     type LoanOpen = Balance;
     type LoanLastChange = BlockNumber;
     type InterestRate = u32; // Interest rate / block (/1_000_000)
+
+    type AssetId = u128;
 
     type NftId = u32;
     type FloorPrice = Balance;
@@ -62,6 +71,7 @@ pub mod collateral {
         sign_transfer: SignTransferRef,
         oracle: OracleRef,
         interest_rate: InterestRate,
+        scoin_asset_id: AssetId,
         using_mock: bool,
         #[storage_field]
         ownable: ownable::Data,
@@ -78,6 +88,7 @@ pub mod collateral {
             sign_transfer_hash: Hash, 
             oracle_hash: Hash, 
             using_mock: bool,
+            scoin_asset_id: Option<AssetId>,
             interest_rate: Option<InterestRate>
 
         ) -> Self {
@@ -86,8 +97,8 @@ pub mod collateral {
                 instance._init_with_owner(caller);
 
                 instance.interest_rate = interest_rate.unwrap_or(15);
-
                 instance.using_mock = using_mock;
+                instance.scoin_asset_id = scoin_asset_id.unwrap_or(4242);
 
                 let salt = version.to_le_bytes();
                 instance.sign_transfer = SignTransferRef::new()
@@ -200,12 +211,11 @@ pub mod collateral {
                 return Err(CollateralError::Custom(String::from("Insufficient loan balance")));
             }
 
- 
-
-
-            // TODO: transfer CCoin using SignTransferRef
-
-            //self.sign_transfer.transfer_coins(
+            // SignTransferRef::transfer_coins(&mut self.sign_transfer, 
+            //     Origin::signed(self.sign_transfer),
+            //     amount, 
+            //     caller,
+            //     self.scoin_asset_id)?;
 
             self.loans.insert(&caller, &(loan_limit,loan_open+amount,self.env().block_number()));
 
@@ -224,6 +234,13 @@ pub mod collateral {
             // TODO: check if the user has this much open loan
 
             // TODO: transfer CCoin from user to contract (SignTransferRef)
+
+            // //TODO: test this :-)
+            // SignTransferRef::transfer_coins(&mut self.sign_transfer, 
+            //     Origin::Caller,
+            //     amount_to_transfer, 
+            //     self.sign_transfer,
+            //     self.scoin_asset_id)?;
 
             Ok(())
         }
@@ -248,7 +265,12 @@ pub mod collateral {
         /// new open loan = old open loan + (last loan change - now) * interest rate
         #[ink(message)] 
         pub fn update_loan_status(&mut self, user: AccountId) -> Result<(LoanLimit, LoanOpen, LoanLastChange), CollateralError> {
-            let (loan_limit, loan_open, loan_last_change) = self.loan_status(user)?;
+            let (loan_limit, loan_open, loan_last_change) = match self.loans.get(&user) {
+                Some((l,o,c)) => (l,o,c),   // existing user
+                None => return Ok((0,0,0)), // new user
+            };
+            
+            self.loan_status(user)?;
 
             let current_block = self.env().block_number();
 
@@ -279,7 +301,6 @@ pub mod collateral {
             let value = ink_env::format!("{}", self.get_random_number(1_000_000, 2_000_000));
 
             OracleRef::set(&mut self.oracle, key, value);
-            //self.oracle.set(key.clone(), value);
             
             Ok(())
         }
@@ -291,5 +312,19 @@ pub mod collateral {
             let mut rng = ChaChaRng::from_seed(seed_converted);
             ((rng.next_u64() / u64::MAX) * (max - min) + min) as u64
         }
+
+
+        #[ink(message)]
+        pub fn test_query_oracle(&self, evm_address: EvmContractAddress) -> Result<u128, CollateralError> {
+            let key = ink_env::format!("nft/0x{}", hex::encode(&evm_address));
+            
+            let value = self.oracle.get(key.clone());
+            let msg = ink_env::format!("{} : {}", key, value);
+            Err(CollateralError::Custom(String::from(msg)))
+
+
+
+        }
+
     }
 }

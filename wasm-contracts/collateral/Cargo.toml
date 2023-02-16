@@ -20,6 +20,8 @@ xvm-helper = { path = "../../wasm-lib/xvm-helper", default-features = false }
 sign-transfer = { path = "sign-transfer", default-features = false, features = ["ink-as-dependency"] }
 oracle = { path = "oracle", default-features = false, features = ["ink-as-dependency"] }
 
+assets_extension = { path = "../../wasm-lib/assets", default-features = false }
+
 openbrush = { git = "https://github.com/PierreOssun/openbrush-contracts", default-features = false, features = ["ownable"] }
 
 rand_chacha = { version = "0.3.1", default-features = false }
