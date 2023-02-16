@@ -29,6 +29,10 @@ pub mod collateral {
     use ethabi::ethereum_types::U256;
     use xvm_helper::XvmErc721;
 
+    use rand_chacha::ChaChaRng; // for mock data only
+    use rand_chacha::rand_core::RngCore;
+    use rand_chacha::rand_core::SeedableRng;
+
     type EvmContractAddress = [u8; 20];
     type RiskFactor = u32;
     type CollateralFactor = u32;
@@ -58,6 +62,7 @@ pub mod collateral {
         sign_transfer: SignTransferRef,
         oracle: OracleRef,
         interest_rate: InterestRate,
+        using_mock: bool,
         #[storage_field]
         ownable: ownable::Data,
     }
@@ -69,12 +74,20 @@ pub mod collateral {
         /// Constructor:
         ///  - Needs the hash of previously deployed sign-transfer and oracle contract
         #[ink(constructor)]
-        pub fn new(version: u32, sign_transfer_hash: Hash, oracle_hash: Hash, interest_rate: Option<InterestRate>) -> Self {
+        pub fn new(version: u32, 
+            sign_transfer_hash: Hash, 
+            oracle_hash: Hash, 
+            using_mock: Option<bool>,
+            interest_rate: Option<InterestRate>
+
+        ) -> Self {
             ink_lang::codegen::initialize_contract(|instance: &mut Self| {
                 let caller = instance.env().caller();
                 instance._init_with_owner(caller);
 
                 instance.interest_rate = interest_rate.unwrap_or(15);
+
+                instance.using_mock = using_mock.unwrap_or(false);
 
                 let salt = version.to_le_bytes();
                 instance.sign_transfer = SignTransferRef::new()
@@ -160,6 +173,10 @@ pub mod collateral {
         #[ink(message)]
         #[modifiers(only_owner)]
         pub fn register_nft_collection(&mut self, evm_address: EvmContractAddress, risk_factor: RiskFactor, collateral_factor: CollateralFactor) -> Result<(),CollateralError> {
+            if self.using_mock {
+                self.mock_populate_oracle(evm_address)?;
+            }
+
             self.collections.insert(&evm_address, &(risk_factor, collateral_factor));
             Ok(())
         }
@@ -183,12 +200,12 @@ pub mod collateral {
                 return Err(CollateralError::Custom(String::from("Insufficient loan balance")));
             }
 
-            let caller = self.env().caller();
+ 
 
 
             // TODO: transfer CCoin using SignTransferRef
 
-//            self.sign_transfer.transfer_coins()
+            //self.sign_transfer.transfer_coins(
 
             self.loans.insert(&caller, &(loan_limit,loan_open+amount,self.env().block_number()));
 
@@ -253,6 +270,26 @@ pub mod collateral {
                 loan_limit: loan_limit,
                 loan_open: loan_open,
             });
+        }
+
+        #[ink(message)]
+        pub fn mock_populate_oracle(&mut self, evm_address: EvmContractAddress) -> Result<(),CollateralError> {
+            let key = ink_env::format!("nft/0x{}", hex::encode(&evm_address));
+
+            let value = ink_env::format!("{}", self.get_random_number(1_000_000, 2_000_000));
+
+            self.oracle.set(key, value);
+
+            Ok(())
+        }
+
+
+        fn get_random_number(&self, min: u64, max: u64) -> u64 {
+            let random_seed = self.env().random(self.env().caller().as_ref());
+            let mut seed_converted: [u8; 32] = Default::default();
+            seed_converted.copy_from_slice(random_seed.0.as_ref());
+            let mut rng = ChaChaRng::from_seed(seed_converted);
+            ((rng.next_u64() / u64::MAX) * (max - min) + min) as u64
         }
     }
 }
