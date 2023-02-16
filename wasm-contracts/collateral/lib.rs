@@ -227,11 +227,19 @@ pub mod collateral {
         #[ink(message)] 
         pub fn repay_loan(&mut self, amount: Option<Balance>) -> Result<(), CollateralError> {
             let caller = self.env().caller();
-            let (_, loan_open, _) = self.update_loan_status(caller)?;
+            let (loan_limit, loan_open, loan_last_change) = self.update_loan_status(caller)?;
 
-            let _amount_to_transfer = amount.unwrap_or(loan_open);
+            let mut amount_to_transfer = amount.unwrap_or(loan_open);
             
-            // TODO: check if the user has this much open loan
+            if amount_to_transfer > loan_open {
+                amount_to_transfer = loan_open;
+            }
+
+            if amount_to_transfer == 0 {
+                return Err(CollateralError::Custom(String::from("Amount cannot be 0")))
+            }
+
+            self.loans.insert(&caller, &(loan_limit, loan_open - amount_to_transfer, loan_last_change));
 
             // TODO: transfer CCoin from user to contract (SignTransferRef)
 
@@ -267,7 +275,7 @@ pub mod collateral {
         pub fn update_loan_status(&mut self, user: AccountId) -> Result<(LoanLimit, LoanOpen, LoanLastChange), CollateralError> {
             let (loan_limit, loan_open, loan_last_change) = match self.loans.get(&user) {
                 Some((l,o,c)) => (l,o,c),   // existing user
-                None => return Ok((0,0,0)), // new user
+                None => return Ok((0,0,self.env().block_number())), // new user
             };
             
             self.loan_status(user)?;
