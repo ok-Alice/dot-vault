@@ -48,9 +48,9 @@ pub mod oracle {
         #[ink(message)]
         pub fn set(&mut self, key: String, value: String) {
             // TODO: Use Openbrush::ownable
-            //let caller = self.env().caller();
-            //assert_eq!(caller, self.owner);
-            
+            let caller = self.env().caller();
+            assert_eq!(caller, self.owner);
+
             self.values.insert(
                 key,
                 &value,

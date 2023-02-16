@@ -278,8 +278,8 @@ pub mod collateral {
 
             let value = ink_env::format!("{}", self.get_random_number(1_000_000, 2_000_000));
 
-            self.oracle.set(key.clone(), value);
-
+            OracleRef::set(&mut self.oracle, key, value);
+            //self.oracle.set(key.clone(), value);
             
             Ok(())
         }
