@@ -53,7 +53,9 @@ Now use the Remix interface to call the **safeMint** an NFT to this H160 address
 Copy the **ERC721 contract address** (H160) and the ID of the NFT that you just minted.
 
 
-## Deploy the contracts
+## Build & Deploy the contracts
+
+You can use the [build-all.sh](../wasm-contracts/collateral) script to build all the contracts.
 
 * Deploy **sign_transfer.contract**
 * Deploy **oracle.contract**
