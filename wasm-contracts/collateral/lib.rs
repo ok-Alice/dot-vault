@@ -77,7 +77,7 @@ pub mod collateral {
         pub fn new(version: u32, 
             sign_transfer_hash: Hash, 
             oracle_hash: Hash, 
-            using_mock: Option<bool>,
+            using_mock: bool,
             interest_rate: Option<InterestRate>
 
         ) -> Self {
@@ -87,7 +87,7 @@ pub mod collateral {
 
                 instance.interest_rate = interest_rate.unwrap_or(15);
 
-                instance.using_mock = using_mock.unwrap_or(false);
+                instance.using_mock = using_mock;
 
                 let salt = version.to_le_bytes();
                 instance.sign_transfer = SignTransferRef::new()
@@ -278,11 +278,11 @@ pub mod collateral {
 
             let value = ink_env::format!("{}", self.get_random_number(1_000_000, 2_000_000));
 
-            self.oracle.set(key, value);
+            self.oracle.set(key.clone(), value);
 
+            
             Ok(())
         }
-
 
         fn get_random_number(&self, min: u64, max: u64) -> u64 {
             let random_seed = self.env().random(self.env().caller().as_ref());
