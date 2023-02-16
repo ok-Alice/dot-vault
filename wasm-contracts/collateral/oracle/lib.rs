@@ -68,6 +68,11 @@ pub mod oracle {
             let floor_price = floor_price_res.unwrap();
             Ok(floor_price)
         }
+
+        #[ink(message)]
+        pub fn account_id(&self) -> AccountId {
+            self.env().account_id()
+        }
     }
 
     #[cfg(test)]

@@ -334,7 +334,17 @@ pub mod collateral {
             Err(CollateralError::Custom(String::from(msg)))
 
 
+        }
 
+        #[ink(message)]
+        pub fn test_accountid(&self) -> String {
+            let account_id_self = self.env().account_id();
+            let account_id_oracle = self.oracle.account_id();
+            let account_id_signtransfer = self.sign_transfer.account_id();
+            let msg = ink_env::format!("Collateral: {:?}\nOracle: {:?}\nSignTransfer: {:?}", 
+                    account_id_self, account_id_oracle, account_id_signtransfer);
+
+            return String::from(msg);
         }
 
     }

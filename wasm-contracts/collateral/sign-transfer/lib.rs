@@ -103,8 +103,12 @@ pub mod sign_transfer {
                 .copy_from_slice(&<ink_env::AccountId as AsRef<[u8]>>::as_ref(from)[..20]);
             dest
         }
-    }
 
+        #[ink(message)]
+        pub fn account_id(&self) -> AccountId {
+            self.env().account_id()
+        }
+    }
     
 }
 
