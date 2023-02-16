@@ -37,6 +37,7 @@ Using the [Openzeppelin Contract wizard](https://wizard.openzeppelin.com/), you 
 
 ![OpenzepellinERC721](img/OpenzepellinERC721.png)
 
+Apart from the **Mintable** and **Auto Increment Ids**, the **Enumerable** option is usefull for debugging and testing.
 
 # Manual testing via Polkadot app
 
@@ -77,3 +78,5 @@ The arguments for this function are:
 * The ID of the previously minted NFT
 
 A successfull call to **depositNFT** can be verified by calling **myLoanStatus** for the same user.
+
+If your ERC721-contract has the **Enumerable** option, you can verify the NFT changed owner by calling **ownerOf** for the given NFT ID.
