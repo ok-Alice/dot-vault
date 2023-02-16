@@ -90,7 +90,6 @@ pub mod collateral {
             using_mock: bool,
             scoin_asset_id: Option<AssetId>,
             interest_rate: Option<InterestRate>
-
         ) -> Self {
             ink_lang::codegen::initialize_contract(|instance: &mut Self| {
                 let caller = instance.env().caller();
@@ -205,19 +204,22 @@ pub mod collateral {
         #[ink(message)]
         pub fn take_loan(&mut self, amount: Balance ) -> Result<(), CollateralError> {
             let caller = self.env().caller();
+            let contract = self.env().account_id();
             let (loan_limit, loan_open, _) = self.update_loan_status(caller)?;
 
             if loan_open + amount > loan_limit {
                 return Err(CollateralError::Custom(String::from("Insufficient loan balance")));
             }
 
-            // SignTransferRef::transfer_coins(&mut self.sign_transfer, 
-            //     Origin::signed(self.sign_transfer),
-            //     amount, 
-            //     caller,
-            //     self.scoin_asset_id)?;
+            ink_env::debug_println!("Test");
+            SignTransferRef::transfer_coins(&mut self.sign_transfer, 
+                Origin::Address,
+                amount, 
+                contract,
+                self.scoin_asset_id
+            )?;
 
-            self.loans.insert(&caller, &(loan_limit,loan_open+amount,self.env().block_number()));
+            self.loans.insert(&caller, &(loan_limit,loan_open + amount, self.env().block_number()));
 
             Ok(())
 
@@ -244,11 +246,12 @@ pub mod collateral {
             // TODO: transfer CCoin from user to contract (SignTransferRef)
 
             // //TODO: test this :-)
-            // SignTransferRef::transfer_coins(&mut self.sign_transfer, 
-            //     Origin::Caller,
-            //     amount_to_transfer, 
-            //     self.sign_transfer,
-            //     self.scoin_asset_id)?;
+            SignTransferRef::transfer_coins(&mut self.sign_transfer, 
+                Origin::Caller,
+                amount_to_transfer, 
+                caller,
+                self.scoin_asset_id
+            )?;
 
             Ok(())
         }
