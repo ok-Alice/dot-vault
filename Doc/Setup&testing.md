@@ -37,7 +37,7 @@ Using the [Openzeppelin Contract wizard](https://wizard.openzeppelin.com/), you 
 
 ![OpenzepellinERC721](img/OpenzepellinERC721.png)
 
-Apart from the **Mintable** and **Auto Increment Ids**, the **Enumerable** option is usefull for debugging and testing.
+Apart from the **Mintable** and **Auto Increment Ids**, the **Enumerable** option is useful for debugging and testing.
 
 # Manual testing via Polkadot app
 
@@ -53,21 +53,23 @@ Now use the Remix interface to call the **safeMint** an NFT to this H160 address
 Copy the **ERC721 contract address** (H160) and the ID of the NFT that you just minted.
 
 
-## Deploy the contracts
+## Build & Deploy the contracts
+
+You can use the [build-all.sh](../wasm-contracts/collateral) script to build all the contracts.
 
 * Deploy **sign_transfer.contract**
 * Deploy **oracle.contract**
 
-Copy the hash (Not the address!) of both and supply them as argument for the contructor when deploying **collateral.contract**, also set **usingMock** to true for manual testing.
+Copy the hash (Not the address!) of both and supply them as argument for the constructor when deploying **collateral.contract**, also set **usingMock** to true for manual testing.
 
 For example:
 ![DeployCollateral](img/deployCollateral.png)
 
 ## Register Collection
 
-Now that the Collateral contract is succesful deployed, you can call the **registerNFTCollection** function to start accepting NFTs from this collection as collateral for a loan.
+Now that the Collateral contract is successful deployed, you can call the **registerNFTCollection** function to start accepting NFTs from this collection as collateral for a loan.
 
-You can verify the register action was succesfull using the functions **registeredNFTCollection** and **testQueryOracle**
+You can verify the register action was successfull using the functions **registeredNFTCollection** and **testQueryOracle**
 
 ## Deposit NFT
 
@@ -77,6 +79,6 @@ The arguments for this function are:
 * The H160 EVM ERC721 contract address
 * The ID of the previously minted NFT
 
-A successfull call to **depositNFT** can be verified by calling **myLoanStatus** for the same user.
+A successful call to **depositNFT** can be verified by using **myLoanStatus** for the same user.
 
 If your ERC721-contract has the **Enumerable** option, you can verify the NFT changed owner by calling **ownerOf** for the given NFT ID.
