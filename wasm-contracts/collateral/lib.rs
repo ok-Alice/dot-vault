@@ -61,7 +61,6 @@ pub mod collateral {
         loan_open: LoanOpen,
     }
 
-
     #[derive(SpreadAllocate, Storage)]
     #[ink(storage)]
     pub struct Collateral {
@@ -203,23 +202,21 @@ pub mod collateral {
         /// Allows user to request transfer of SCoin as long as loan limit allows it
         #[ink(message)]
         pub fn take_loan(&mut self, amount: Balance ) -> Result<(), CollateralError> {
+            ink_env::debug_println!("HELLOWORLD");
             let caller = self.env().caller();
             let contract = self.env().account_id();
-            let (loan_limit, loan_open, _) = self.update_loan_status(caller)?;
+            // let (loan_limit, loan_open, _) = self.update_loan_status(caller)?;
 
-            if loan_open + amount > loan_limit {
-                return Err(CollateralError::Custom(String::from("Insufficient loan balance")));
-            }
+            // if loan_open + amount > loan_limit {
+            //     return Err(CollateralError::Custom(String::from("Insufficient loan balance")));
+            // }
 
-            ink_env::debug_println!("Test");
-            SignTransferRef::transfer_coins(&mut self.sign_transfer, 
-                Origin::Address,
-                amount, 
-                contract,
-                self.scoin_asset_id
-            )?;
+            AssetsExtension::approve_transfer(Origin::Caller, self.scoin_asset_id, contract, amount)
+                .map_err(|_| CollateralError::Custom("transfer failed".into()))?;
+            AssetsExtension::transfer(Origin::Caller, self.scoin_asset_id, contract, amount)
+                .map_err(|_| CollateralError::Custom("transfer failed".into()))?;
 
-            self.loans.insert(&caller, &(loan_limit,loan_open + amount, self.env().block_number()));
+            // self.loans.insert(&caller, &(loan_limit,loan_open + amount, self.env().block_number()));
 
             Ok(())
 
