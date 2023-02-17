@@ -203,21 +203,20 @@ pub mod collateral {
         /// Allows user to request transfer of SCoin as long as loan limit allows it
         #[ink(message)]
         pub fn take_loan(&mut self, amount: Balance ) -> Result<(), CollateralError> {
-            ink_env::debug_println!("HELLOWORLD");
             let caller = self.env().caller();
             let contract = self.env().account_id();
             // let (loan_limit, loan_open, _) = self.update_loan_status(caller)?;
 
-            // if loan_open + amount > loan_limit {
+            // if loan_open.saturating_add(amount) > loan_limit {
             //     return Err(CollateralError::Custom(String::from("Insufficient loan balance")));
             // }
 
-            self.pallet_assets.approve_transfer(Origin::Caller, self.scoin_asset_id, contract, amount)
-                .map_err(|_| CollateralError::Custom("transfer failed".into()))?;
-            self.pallet_assets.transfer(Origin::Caller, self.scoin_asset_id, contract, amount)
+            self.pallet_assets.approve_transfer(Origin::Address, self.scoin_asset_id, caller, amount)
+                 .map_err(|_| CollateralError::Custom("approve failed".into()))?;
+            self.pallet_assets.transfer(Origin::Address, self.scoin_asset_id, caller, amount)
                 .map_err(|_| CollateralError::Custom("transfer failed".into()))?;
 
-            // self.loans.insert(&caller, &(loan_limit,loan_open + amount, self.env().block_number()));
+            // self.loans.insert(&caller, &(loan_limit, loan_open.saturating_add(amount), self.env().block_number()));
 
             Ok(())
 
@@ -227,6 +226,7 @@ pub mod collateral {
         #[ink(message)] 
         pub fn repay_loan(&mut self, amount: Option<Balance>) -> Result<(), CollateralError> {
             let caller = self.env().caller();
+            let contract = self.env().account_id();
             let (loan_limit, loan_open, loan_last_change) = self.update_loan_status(caller)?;
 
             let mut amount_to_transfer = amount.unwrap_or(loan_open);
@@ -239,17 +239,12 @@ pub mod collateral {
                 return Err(CollateralError::Custom(String::from("Amount cannot be 0")))
             }
 
+            // self.pallet_assets.approve_transfer(Origin::Caller, self.scoin_asset_id, contract, amount)
+            //     .map_err(|_| CollateralError::Custom("transfer failed".into()))?;
+            self.pallet_assets.transfer(Origin::Caller, self.scoin_asset_id, contract, amount_to_transfer)
+                .map_err(|_| CollateralError::Custom("transfer failed".into()))?;
+
             self.loans.insert(&caller, &(loan_limit, loan_open - amount_to_transfer, loan_last_change));
-
-            // TODO: transfer CCoin from user to contract (SignTransferRef)
-
-            // //TODO: test this :-)
-            // SignTransferRef::transfer_coins(&mut self.sign_transfer, 
-            //     Origin::Caller,
-            //     amount_to_transfer, 
-            //     caller,
-            //     self.scoin_asset_id
-            // )?;
 
             Ok(())
         }
