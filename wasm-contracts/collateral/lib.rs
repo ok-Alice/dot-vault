@@ -205,18 +205,18 @@ pub mod collateral {
         pub fn take_loan(&mut self, amount: Balance ) -> Result<(), CollateralError> {
             let caller = self.env().caller();
             let contract = self.env().account_id();
-            // let (loan_limit, loan_open, _) = self.update_loan_status(caller)?;
+            let (loan_limit, loan_open, _) = self.update_loan_status(caller)?;
 
-            // if loan_open.saturating_add(amount) > loan_limit {
-            //     return Err(CollateralError::Custom(String::from("Insufficient loan balance")));
-            // }
+            if loan_open.saturating_add(amount) > loan_limit {
+                return Err(CollateralError::Custom(String::from("Insufficient loan balance")));
+            }
 
             self.pallet_assets.approve_transfer(Origin::Address, self.scoin_asset_id, caller, amount)
                  .map_err(|_| CollateralError::Custom("approve failed".into()))?;
             self.pallet_assets.transfer(Origin::Address, self.scoin_asset_id, caller, amount)
                 .map_err(|_| CollateralError::Custom("transfer failed".into()))?;
 
-            // self.loans.insert(&caller, &(loan_limit, loan_open.saturating_add(amount), self.env().block_number()));
+            self.loans.insert(&caller, &(loan_limit, loan_open.saturating_add(amount), self.env().block_number()));
 
             Ok(())
 
@@ -239,8 +239,8 @@ pub mod collateral {
                 return Err(CollateralError::Custom(String::from("Amount cannot be 0")))
             }
 
-            // self.pallet_assets.approve_transfer(Origin::Caller, self.scoin_asset_id, contract, amount)
-            //     .map_err(|_| CollateralError::Custom("transfer failed".into()))?;
+            self.pallet_assets.approve_transfer(Origin::Caller, self.scoin_asset_id, contract, amount_to_transfer)
+                .map_err(|_| CollateralError::Custom("approve failed".into()))?;
             self.pallet_assets.transfer(Origin::Caller, self.scoin_asset_id, contract, amount_to_transfer)
                 .map_err(|_| CollateralError::Custom("transfer failed".into()))?;
 
@@ -280,8 +280,9 @@ pub mod collateral {
 
             //TODO: using u64 cast as u128 gives 'Validation of the Wasm failed' error, figure out why 
             // formula: new_loan_open = loan_open + ((loan_last_change - current_block) * self.interest_rate )* loan_open / 1_000_000
-            let interest = u64::from(loan_last_change).saturating_sub(current_block.into()).saturating_mul(self.interest_rate.into()).saturating_mul(loan_open as u64).saturating_div(1_000_000);
-            let new_loan_open = loan_open.saturating_add(interest.into());
+            // let interest = u64::from(loan_last_change).saturating_sub(current_block.into()).saturating_mul(self.interest_rate.into()).saturating_mul(loan_open as u64).saturating_div(1_000_000);
+            // let new_loan_open = loan_open.saturating_add(interest.into());
+            let new_loan_open = loan_open;
 
             self.loans_insert(&user, loan_limit, new_loan_open, current_block);
 
