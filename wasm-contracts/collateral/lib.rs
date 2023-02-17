@@ -30,11 +30,11 @@ pub mod collateral {
     use ethabi::ethereum_types::U256;
     use xvm_helper::XvmErc721;
     
-    // pub use pallet_assets_chain_extension::{
-    //     ink::*,
-    //     traits::*,
-    // };
-    use assets_extension::*;
+    pub use pallet_assets_chain_extension::{
+         ink::*,
+         traits::*,
+     };
+    //use assets_extension::*;
     
     use rand_chacha::ChaChaRng; // for mock data only
     use rand_chacha::rand_core::RngCore;
@@ -71,6 +71,7 @@ pub mod collateral {
         oracle: OracleRef,
         interest_rate: InterestRate,
         scoin_asset_id: AssetId,
+        pallet_assets: AssetsExtension,
         using_mock: bool,
         #[storage_field]
         ownable: ownable::Data,
@@ -211,9 +212,9 @@ pub mod collateral {
             //     return Err(CollateralError::Custom(String::from("Insufficient loan balance")));
             // }
 
-            AssetsExtension::approve_transfer(Origin::Caller, self.scoin_asset_id, contract, amount)
+            self.pallet_assets.approve_transfer(Origin::Caller, self.scoin_asset_id, contract, amount)
                 .map_err(|_| CollateralError::Custom("transfer failed".into()))?;
-            AssetsExtension::transfer(Origin::Caller, self.scoin_asset_id, contract, amount)
+            self.pallet_assets.transfer(Origin::Caller, self.scoin_asset_id, contract, amount)
                 .map_err(|_| CollateralError::Custom("transfer failed".into()))?;
 
             // self.loans.insert(&caller, &(loan_limit,loan_open + amount, self.env().block_number()));
@@ -243,12 +244,12 @@ pub mod collateral {
             // TODO: transfer CCoin from user to contract (SignTransferRef)
 
             // //TODO: test this :-)
-            SignTransferRef::transfer_coins(&mut self.sign_transfer, 
-                Origin::Caller,
-                amount_to_transfer, 
-                caller,
-                self.scoin_asset_id
-            )?;
+            // SignTransferRef::transfer_coins(&mut self.sign_transfer, 
+            //     Origin::Caller,
+            //     amount_to_transfer, 
+            //     caller,
+            //     self.scoin_asset_id
+            // )?;
 
             Ok(())
         }
@@ -338,7 +339,7 @@ pub mod collateral {
             let account_id_self = self.env().account_id();
             let account_id_oracle = self.oracle.account_id();
             let account_id_signtransfer = self.sign_transfer.account_id();
-            let msg = ink_env::format!("Collateral: {:?}\nOracle: {:?}\nSignTransfer: {:?}", 
+            let msg = ink_env::format!("Collateral: {:?} Oracle: {:?} SignTransfer: {:?}", 
                     account_id_self, account_id_oracle, account_id_signtransfer);
 
             return String::from(msg);
